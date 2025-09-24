@@ -1,11 +1,20 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { validationResult } = require("express-validator");
+
 
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
 exports.register = async (req, res) => {
    console.log("req.body:", req.body);
+   const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      message: "Invalid input",
+      errors: errors.array(),
+    });
+  }
   try {
     const { email, password } = req.body || {};  //  prevents crash
     if (!email || !password) {
@@ -22,8 +31,15 @@ exports.register = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
-
+ 
 exports.login = async (req, res) => {
+  const errors = validationResult(req);
+if (!errors.isEmpty()) {
+  return res.status(400).json({
+    message: "Invalid input",
+    errors: errors.array(),
+  });
+}
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
