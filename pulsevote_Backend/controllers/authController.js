@@ -5,6 +5,7 @@ const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
 exports.register = async (req, res) => {
+   console.log("req.body:", req.body);
   try {
     const { email, password } = req.body || {};  //  prevents crash
     if (!email || !password) {
