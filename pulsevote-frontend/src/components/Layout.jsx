@@ -1,6 +1,7 @@
 // src/components/Layout.jsx
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import CSPTest from './CSPTest'; 
 
 export default function Layout({ children }) {
   const { isAuthenticated, user, logout } = useAuth();
@@ -23,6 +24,7 @@ export default function Layout({ children }) {
               <>
                 <Link to="/" className="nav-link">Home</Link>
                 <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                <Link to="/csp-test" className="nav-link">CSP Test</Link> {/* Added CSP Test link */}
                 <button onClick={handleLogout} className="nav-link logout-btn">
                   Logout
                 </button>
