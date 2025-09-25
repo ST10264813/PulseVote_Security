@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const app = require('./app');
 const http = require('http');
-//const https = require('https');
+const https = require('https');
 const fs = require('fs');
 require('dotenv').config();
 
@@ -15,8 +15,8 @@ const options = {
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB");
-    http.createServer(options, app).listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    https.createServer(options, app).listen(PORT, () => {
+      console.log(`🚀 Server running at https://localhost:${PORT}`);
     });
   })
   .catch((err) => {
