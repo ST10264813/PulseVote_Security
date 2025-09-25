@@ -2,16 +2,57 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
+const authRoutes = require("./routes/authRoutes");
+const organisationRoutes = require("./routes/organisationRoutes");
+const pollRoutes = require("./routes/pollRoutes");
+const { protect } = require("./middleware/authMiddleware");
 
 dotenv.config();
-
 const app = express();
-app.use((req, res, next) => {
-  console.log("Headers:", req.headers);
-  console.log("Method:", req.method);
-  console.log("Body:", req.body);
-  next();
-});
+
+app.use(helmet());
+
+const CSP_CONNECT = (process.env.CSP_CONNECT || '').split(',').filter(Boolean);
+const defaultConnect = [
+"'self'",
+"http://localhost:5000", "https://localhost:5000",
+"http://localhost:5173", "https://localhost:5173",
+"ws://localhost:5173", "wss://localhost:5173"
+];
+
+app.use(
+helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "https://apis.google.com"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    imgSrc: ["'self'", "data:"],
+    connectSrc: CSP_CONNECT.length ? CSP_CONNECT : defaultConnect,
+    },
+})
+);
+
+const allowed = (process.env.CORS_ORIGINS || "http://localhost:5173,https://localhost:5173")
+.split(',')
+.map(s => s.trim());
+
+app.use(cors({
+origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowed.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS blocked: ${origin}`));
+},
+credentials: true
+}));
+
+app.use(express.json());
+app.set('trust proxy', 1);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/organisations", organisationRoutes);
+app.use("/api/polls", pollRoutes);
 
 app.get('/health', (req, res) => 
 res.status(200).json({
@@ -19,59 +60,22 @@ res.status(200).json({
     ts: Date.now()
 }));
 
-// Middlewares
-app.use(
-helmet.contentSecurityPolicy({
-    directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "https://apis.google.com"],
-    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-    fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    imgSrc: ["'self'", "data:"],
-    connectSrc: ["'self'", "http://localhost:5000"], // or whichever port you use
-    },
-})
-);
-app.use(cors({
-  origin: "https://localhost:5173",
-  credentials: true
-}));
-app.set('trust proxy', 1);
-app.use(express.json()); // parse JSON
-app.use(express.urlencoded({ extended: true })); // parse form data
+app.get('/', (req, res) => 
+res.send('PulseVote API running!'));
 
-// Routes
-const authRoutes = require("./routes/authRoutes");
-app.use("/api/auth", authRoutes);
-
-const organisationRoutes = require("./routes/organisationRoutes");
-app.use("/api/organisations", organisationRoutes);
-
-const pollRoutes = require("./routes/pollRoutes");
-app.use("/api/polls", pollRoutes);
-
-
-
-// Test routes
 app.get('/test', (req, res) => {
-  res.json({
-    message: "Hello from PulseVote backend!",
-    timestamp: new Date(),
-    votes: [10, 20, 30]
-  });
+res.json({
+    message: 'This is a test endpoint from PulseVote API!',
+    status: 'success',
+    timestamp: new Date()
+});
 });
 
-app.get('/', (req, res) => {
-  res.send('PulseVote API running!');
-});
-
-// Protected route
-const { protect } = require("./middleware/authMiddleware");
 app.get("/api/protected", protect, (req, res) => {
-  res.json({
+res.json({
     message: `Welcome, user ${req.user.id}! You have accessed protected data.`,
     timestamp: new Date()
-  });
+});
 });
 
 module.exports = app;
