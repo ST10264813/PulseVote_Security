@@ -13,6 +13,12 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/health', (req, res) => 
+res.status(200).json({
+    ok: true,
+    ts: Date.now()
+}));
+
 // Middlewares
 app.use(
 helmet.contentSecurityPolicy({
