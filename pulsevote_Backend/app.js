@@ -37,6 +37,14 @@ app.use(express.urlencoded({ extended: true })); // parse form data
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
+const organisationRoutes = require("./routes/organisationRoutes");
+app.use("/api/organisations", organisationRoutes);
+
+const pollRoutes = require("./routes/pollRoutes");
+app.use("/api/polls", pollRoutes);
+
+
+
 // Test routes
 app.get('/test', (req, res) => {
   res.json({

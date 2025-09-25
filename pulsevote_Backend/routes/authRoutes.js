@@ -1,9 +1,13 @@
+// routes/authRoutes.js
 const express = require("express");
-const { register, login } = require("../controllers/authController");
 const { body } = require("express-validator");
+const { registerUser, registerManager, registerAdmin, login } = require("../controllers/authController");
+const { protect } = require("../middleware/authMiddleware");
+const { requireRole } = require("../middleware/roleMiddleware");
+
 const router = express.Router();
 
-
+// Validators
 const emailValidator = body("email")
   .isEmail().withMessage("Email must be valid")
   .normalizeEmail();
@@ -15,8 +19,12 @@ const passwordValidator = body("password")
   .trim()
   .escape();
 
-router.post("/register", [emailValidator, passwordValidator], register);
-router.post("/login", [emailValidator, body("password").notEmpty().trim().escape()], login);
 
+
+// Routes - Fixed syntax according to documentation
+router.post("/register-user", [emailValidator, passwordValidator], registerUser);
+router.post("/register-manager", protect, requireRole("admin"), [emailValidator, passwordValidator], registerManager);
+router.post("/register-admin", [emailValidator, passwordValidator], registerAdmin);
+router.post("/login", [emailValidator, body("password").notEmpty().trim().escape()], login);
 
 module.exports = router;
